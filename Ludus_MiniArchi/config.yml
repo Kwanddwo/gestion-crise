@@ -1,0 +1,74 @@
+ludus:
+  - vm_name: "{{ range_id }}-mattermost"
+    hostname: "{{ range_id }}-mattermost"
+    template: debian-12-x64-server-template
+    vlan: 10
+    ip_last_octet: 10
+    ram_gb: 4
+    cpus: 2
+    linux: true
+    roles:
+      - local_mattermost
+
+  - vm_name: "{{ range_id }}-client-1"
+    hostname: "{{ range_id }}-client-1"
+    template: debian-12-x64-server-template
+    vlan: 20
+    ip_last_octet: 11
+    ram_gb: 2
+    cpus: 2
+    linux: true
+
+  - vm_name: "{{ range_id }}-client-2"
+    hostname: "{{ range_id }}-client-2"
+    template: debian-12-x64-server-template
+    vlan: 20
+    ip_last_octet: 12
+    ram_gb: 2
+    cpus: 2
+    linux: true
+
+  - vm_name: "{{ range_id }}-api01"
+    hostname: "{{ range_id }}-api01"
+    template: debian-12-x64-server-template
+    vlan: 10
+    ip_last_octet: 20
+    ram_gb: 2
+    cpus: 1
+    linux: true
+    roles:
+      - local_api
+
+  - vm_name: "{{ range_id }}-db01"
+    hostname: "{{ range_id }}-db01"
+    template: debian-12-x64-server-template
+    vlan: 30
+    ip_last_octet: 10
+    ram_gb: 2
+    cpus: 2
+    linux: true
+    roles:
+      - local_postgres
+
+network:
+  inter_vlan_default: REJECT
+  external_default: ACCEPT
+  rules:
+    - name: Clients vers Mattermost
+      vlan_src: 20
+      vlan_dst: 10
+      protocol: tcp
+      ports: 8065
+      action: ACCEPT
+    - name: Clients vers API
+      vlan_src: 20
+      vlan_dst: 10
+      protocol: tcp
+      ports: 80
+      action: ACCEPT
+    - name: API01 vers PostgreSQL
+      vlan_src: 10
+      vlan_dst: 30
+      protocol: tcp
+      ports: 5432
+      action: ACCEPT

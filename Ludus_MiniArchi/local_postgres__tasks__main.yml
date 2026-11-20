@@ -1,0 +1,37 @@
+- name: Installer PostgreSQL
+  ansible.builtin.apt:
+    name: [postgresql, postgresql-client]
+    state: present
+    update_cache: true
+
+- name: Ecouter sur l IP du VLAN 30
+  ansible.builtin.lineinfile:
+    path: /etc/postgresql/15/main/postgresql.conf
+    regexp: '^#?listen_addresses'
+    line: "listen_addresses = 'localhost,10.1.30.10'"
+
+- name: Autoriser uniquement API01
+  ansible.builtin.lineinfile:
+    path: /etc/postgresql/15/main/pg_hba.conf
+    line: "host  mobilite  api  10.1.10.20/32  scram-sha-256"
+
+- name: Redemarrer PostgreSQL
+  ansible.builtin.service:
+    name: postgresql
+    state: restarted
+    enabled: true
+
+- name: Copier le script SQL
+  ansible.builtin.copy:
+    src: init.sql
+    dest: /tmp/init.sql
+    mode: "0644"
+
+- name: Copier le script de creation
+  ansible.builtin.copy:
+    src: setup.sh
+    dest: /tmp/setup.sh
+    mode: "0755"
+
+- name: Creer role, base et donnees
+  ansible.builtin.command: /bin/bash /tmp/setup.sh

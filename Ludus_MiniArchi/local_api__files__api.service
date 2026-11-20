@@ -1,0 +1,8 @@
+[Unit]
+Description=API reservation demo
+After=network.target
+[Service]
+ExecStart=/usr/bin/python3 /opt/api.py
+Restart=always
+[Install]
+WantedBy=multi-user.target

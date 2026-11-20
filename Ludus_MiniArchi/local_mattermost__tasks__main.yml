@@ -1,0 +1,29 @@
+- name: Installer certificats, apparmor, openssl et curl
+  ansible.builtin.apt:
+    name: [ca-certificates, apparmor, openssl, curl]
+    state: present
+    update_cache: true
+  register: prereqs
+
+- name: Installer Docker
+  ansible.builtin.apt:
+    name: docker.io
+    state: present
+
+- name: Démarrer Docker (redémarrage si des prérequis viennent d'être installés)
+  ansible.builtin.service:
+    name: docker
+    state: "{{ 'restarted' if prereqs.changed else 'started' }}"
+    enabled: true
+
+- name: Lancer Mattermost (seulement s'il ne tourne pas déjà)
+  ansible.builtin.shell: |
+    if [ -z "$(docker ps -q -f name=^mattermost$ -f status=running)" ]; then
+      docker rm -f mattermost >/dev/null 2>&1 || true
+      docker run -d --name mattermost --restart unless-stopped \
+        -p 8065:8065 \
+        -e MM_SERVICESETTINGS_ENABLELOCALMODE=true \
+        mattermost/mattermost-preview
+    fi
+  args:
+    executable: /bin/bash
